@@ -4,7 +4,7 @@
 
 This PR contains:
 
-- Poetry implementation because the currently managing dependencies system will be deprecated comming soon (middle of Q2).
+-
 
 ## Ticket
 
