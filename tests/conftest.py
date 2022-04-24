@@ -6,5 +6,5 @@ from fastapi.testclient import TestClient
 @pytest.fixture
 def client() -> TestClient:
     """App fixture."""
-    # app = create_app()
+    # app = create_app() # TODO: create_app()
     return TestClient(app)
