@@ -16,25 +16,25 @@ class AuthHandler:
     ALGORITHMS = "HS256"
 
     @classmethod
-    def get_password_hash(self, password: str) -> Union[Any, str]:
-        return self.PWD_CONTEXT.hash(password)
+    def get_password_hash(cls, password: str) -> Union[Any, str]:
+        return cls.PWD_CONTEXT.hash(password)
 
     @classmethod
-    def verify_password(self, password: str, hashed: str) -> Union[Any, bool]:
-        return self.PWD_CONTEXT.verify(password, hashed)
+    def verify_password(cls, password: str, hashed: str) -> Union[Any, bool]:
+        return cls.PWD_CONTEXT.verify(password, hashed)
 
     @classmethod
-    def encode_token(self, user: Dict) -> Union[Any, str]:
+    def encode_token(cls, user: Dict) -> Union[Any, str]:
         jwt_payload = {
             "exp": datetime.utcnow() + timedelta(minutes=5),
             "user": user,
         }
-        return jwt.encode(jwt_payload, self.SECRET, algorithm=self.ALGORITHMS)
+        return jwt.encode(jwt_payload, cls.SECRET, algorithm=cls.ALGORITHMS)
 
     @classmethod
-    def decode_token(self, token: str) -> Any:
+    def decode_token(cls, token: str) -> Any:
         try:
-            payload = jwt.decode(token, self.SECRET, algorithms=self.ALGORITHMS)
+            payload = jwt.decode(token, cls.SECRET, algorithms=cls.ALGORITHMS)
         except exceptions.JWEInvalidAuth:
             raise HTTPException(
                 status_code=HTTPStatus.UNAUTHORIZED, detail="Invalid token"
@@ -48,6 +48,6 @@ class AuthHandler:
 
     @classmethod
     def get_current_user(
-        self, auth: HTTPAuthorizationCredentials = Security(SECURITY)
+        cls, auth: HTTPAuthorizationCredentials = Security(SECURITY)
     ) -> Any:
-        return self.decode_token(auth.credentials)
+        return cls.decode_token(auth.credentials)
