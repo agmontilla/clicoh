@@ -15,12 +15,15 @@ class AuthHandler:
     SECRET = "secret"
     ALGORITHMS = "HS256"
 
+    @classmethod
     def get_password_hash(self, password: str) -> Union[Any, str]:
         return self.PWD_CONTEXT.hash(password)
 
+    @classmethod
     def verify_password(self, password: str, hashed: str) -> Union[Any, bool]:
         return self.PWD_CONTEXT.verify(password, hashed)
 
+    @classmethod
     def encode_token(self, user: Dict) -> Union[Any, str]:
         jwt_payload = {
             "exp": datetime.utcnow() + timedelta(minutes=5),
@@ -28,6 +31,7 @@ class AuthHandler:
         }
         return jwt.encode(jwt_payload, self.SECRET, algorithm=self.ALGORITHMS)
 
+    @classmethod
     def decode_token(self, token: str) -> Any:
         try:
             payload = jwt.decode(token, self.SECRET, algorithms=self.ALGORITHMS)
@@ -42,6 +46,7 @@ class AuthHandler:
 
         return payload["user"]
 
+    @classmethod
     def get_current_user(
         self, auth: HTTPAuthorizationCredentials = Security(SECURITY)
     ) -> Any:

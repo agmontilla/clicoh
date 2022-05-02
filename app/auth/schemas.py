@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+# TODO Change data type of email to use email_validator
+
 
 class UserBase(BaseModel):
     email: str

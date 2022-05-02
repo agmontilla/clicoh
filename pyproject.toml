@@ -12,6 +12,8 @@ pydantic = "^1.9.0"
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 passlib = "^1.7.4"
 bcrypt = "^3.2.0"
+SQLAlchemy = "^1.4.36"
+alembic = "^1.7.7"
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"
