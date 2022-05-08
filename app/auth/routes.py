@@ -1,37 +1,33 @@
 from http import HTTPStatus
-from typing import List, Optional
 
-from app.auth.schemas import UserCreate, Token
-from app.auth.validators import AuthHandler
-from fastapi import APIRouter
+from app.auth import schemas
+from app.auth.validators import AuthHandler as auth_handler
+from app.database import get_db
+from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
+from sqlalchemy.orm import Session
+from app.auth.services import verify_email_exists, register_user
 
 auth_router = APIRouter()
-auth_handler = AuthHandler()
-
-users: List[UserCreate] = [
-    UserCreate(
-        email="montilla05alfonso", password=auth_handler.get_password_hash("123")
-    )
-]
 
 
 @auth_router.post("/signup", response_model=str, status_code=HTTPStatus.CREATED)
-def signup(user: UserCreate) -> str:
-    if user.email in [u.email for u in users]:
+def signup(payload: schemas.User, database: Session = Depends(get_db)) -> str:
+    user = verify_email_exists(payload.email, database)
+
+    if user:
         raise HTTPException(
             status_code=HTTPStatus.CONFLICT, detail="User already exists"
         )
 
-    hashed_password = auth_handler.get_password_hash(user.password)
-    users.append(UserCreate(email=user.email, password=hashed_password))
+    register_user(payload, database)
 
     return "User Created"
 
 
 @auth_router.post(
     "/login",
-    response_model=Token,
+    response_model=schemas.Token,
     status_code=HTTPStatus.CREATED,
     responses={
         HTTPStatus.UNAUTHORIZED.value: {
@@ -39,18 +35,18 @@ def signup(user: UserCreate) -> str:
         }
     },
 )
-def login(user: UserCreate) -> Token:
-    user_flag: Optional[UserCreate] = None
+def login(payload: schemas.User, database: Session = Depends(get_db)) -> schemas.Token:
 
-    for u in users:
-        if u.email == user.email:
-            user_flag = u
-            break
+    user = verify_email_exists(payload.email, database)
 
-    if user_flag is None or not auth_handler.verify_password(user.password, u.password):
+    if not user or not user.check_password(payload.password):
         raise HTTPException(
             status_code=HTTPStatus.UNAUTHORIZED,
             detail="Invalid username and/or credentials",
         )
 
-    return Token(access_token="Bearer " + auth_handler.encode_token(user_flag.dict()))
+    user_chema = schemas.User.from_orm(user)
+
+    return schemas.Token(
+        access_token="Bearer " + auth_handler.encode_token(user_chema.dict())
+    )

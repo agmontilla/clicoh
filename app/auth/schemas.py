@@ -1,15 +1,16 @@
-from pydantic import BaseModel
-
-# TODO Change data type of email to use email_validator
+from pydantic import BaseModel, EmailStr
 
 
 class UserBase(BaseModel):
-    email: str
+    email: EmailStr
     password: str
 
 
-class UserCreate(UserBase):
+class User(UserBase):
     pass
+
+    class Config:
+        orm_mode = True
 
 
 class Token(BaseModel):
