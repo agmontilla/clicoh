@@ -1,12 +1,12 @@
 from http import HTTPStatus
 
 from app.auth import schemas
+from app.auth.services import register_user, verify_email_exists
 from app.auth.validators import AuthHandler as auth_handler
 from app.database import get_db
 from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
-from app.auth.services import verify_email_exists, register_user
 
 auth_router = APIRouter()
 
