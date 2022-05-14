@@ -26,7 +26,7 @@ def create_product(
 @products_router.delete(
     "/{product_id}",
     status_code=HTTPStatus.NO_CONTENT,
-    responses={HTTPStatus.NOT_FOUND: {"detail": "Product not found"}},
+    responses={HTTPStatus.NOT_FOUND.value: {"detail": "Product not found"}},
 )
 def remove_product(product_id: str, database: Session = Depends(get_db)) -> None:
     try:
@@ -42,7 +42,7 @@ def remove_product(product_id: str, database: Session = Depends(get_db)) -> None
 @products_router.get(
     "/{product_id}",
     response_model=schemas.ProductOut,
-    responses={HTTPStatus.NOT_FOUND: {"detail": "Product not found"}},
+    responses={HTTPStatus.NOT_FOUND.value: {"detail": "Product not found"}},
 )
 def get_product(
     product_id: str, database: Session = Depends(get_db)
@@ -55,3 +55,6 @@ def get_product(
         )
 
     return product
+
+
+# @products_router.get("/", response_model=schemas.ProductOut)
