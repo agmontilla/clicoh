@@ -5,6 +5,7 @@ from app.products import schemas
 from app.products.services import (
     create_new_product,
     delete_existing_product,
+    get_all_products,
     get_existing_product,
 )
 from fastapi import APIRouter, Depends
@@ -57,4 +58,6 @@ def get_product(
     return product
 
 
-# @products_router.get("/", response_model=schemas.ProductOut)
+@products_router.get("/", response_model=schemas.ProductsOutCollection)
+def get_products(database: Session = Depends(get_db)) -> schemas.ProductsOutCollection:
+    return get_all_products(database)

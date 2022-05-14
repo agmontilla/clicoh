@@ -1,4 +1,5 @@
 from pydantic import BaseModel, validator
+from typing import List
 
 
 class ProductIn(BaseModel):
@@ -24,3 +25,7 @@ class ProductIn(BaseModel):
 
 class ProductOut(ProductIn):
     id: str
+
+
+class ProductsOutCollection(BaseModel):
+    items: List[ProductOut]

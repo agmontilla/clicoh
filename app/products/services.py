@@ -30,3 +30,11 @@ def get_existing_product(product_id: str, database: Session) -> schemas.ProductO
         raise ValueError("Product not found")
 
     return schemas.ProductOut.from_orm(product)
+
+
+def get_all_products(database: Session) -> schemas.ProductsOutCollection:
+    products = database.query(models.Product)
+
+    return schemas.ProductsOutCollection(
+        items=[schemas.ProductOut.from_orm(product) for product in products]
+    )
