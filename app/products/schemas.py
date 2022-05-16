@@ -28,4 +28,4 @@ class ProductOut(ProductIn):
 
 
 class ProductsOutCollection(BaseModel):
-    items: List[ProductOut]
+    products: List[ProductOut]

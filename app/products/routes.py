@@ -7,6 +7,7 @@ from app.products.services import (
     delete_existing_product,
     get_all_products,
     get_existing_product,
+    update_a_product,
 )
 from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
@@ -61,3 +62,22 @@ def get_product(
 @products_router.get("/", response_model=schemas.ProductsOutCollection)
 def get_products(database: Session = Depends(get_db)) -> schemas.ProductsOutCollection:
     return get_all_products(database)
+
+
+@products_router.put(
+    "/{product_id}",
+    status_code=HTTPStatus.NO_CONTENT,
+    responses={HTTPStatus.NOT_FOUND.value: {"detail": "Product not found"}},
+)
+def update_product(
+    product_id: str, product: schemas.ProductIn, database: Session = Depends(get_db)
+) -> None:
+
+    try:
+        update_a_product(product_id, product, database)
+    except ValueError:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="Product not found"
+        )
+
+    return

@@ -48,3 +48,23 @@ def dummy_product_id() -> str:
     database.commit()
 
     return ProductOut.from_orm(new_product).id
+
+
+@pytest.fixture()
+def dummy_insert_two_products() -> Iterator:
+    fake = Faker()
+    database = next(override_get_db())
+    database.query(Product).delete()
+
+    database.add_all(
+        [
+            Product(name=fake.company(), price=1.0, stock=1),
+            Product(name=fake.company(), price=1.0, stock=1),
+        ]
+    )
+    database.commit()
+
+    yield
+
+    database.query(Product).delete()
+    database.commit()

@@ -36,5 +36,20 @@ def get_all_products(database: Session) -> schemas.ProductsOutCollection:
     products = database.query(models.Product)
 
     return schemas.ProductsOutCollection(
-        items=[schemas.ProductOut.from_orm(product) for product in products]
+        products=[schemas.ProductOut.from_orm(product) for product in products]
     )
+
+
+def update_a_product(
+    product_id: str, product: schemas.ProductIn, database: Session
+) -> schemas.ProductOut:
+    product_to_update = database.query(models.Product).get(product_id)
+    if not product_to_update:
+        raise ValueError("Product not found")
+
+    for key, value in product.dict().items():
+        setattr(product_to_update, key, value)
+
+    database.commit()
+
+    return schemas.ProductOut.from_orm(product_to_update)

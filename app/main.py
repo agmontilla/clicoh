@@ -4,7 +4,7 @@ from app.auth.routes import auth_router
 from app.products.routes import products_router
 from app.auth.validators import AuthHandler as auth_handler
 
-app = FastAPI()
+app = FastAPI(title="ClicOH API")
 
 app.include_router(hello_router, prefix="/hello", tags=["Hello"])
 app.include_router(auth_router, prefix="/users", tags=["Auth"])
