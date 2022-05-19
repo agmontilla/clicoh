@@ -1,8 +1,9 @@
-from typing import Iterator
-import pytest
-from fastapi.testclient import TestClient
-from app.products.schemas import ProductIn
 from http import HTTPStatus
+from typing import Callable, Iterator
+
+import pytest
+from app.products.schemas import ProductIn
+from fastapi.testclient import TestClient
 
 
 class TestProductSchemas:
@@ -38,11 +39,14 @@ class TestProductEndpoints:
         assert response.status_code == HTTPStatus.CREATED
 
     def test_delete_a_product_is_working(
-        self, client: TestClient, dummy_bearer_token: str, dummy_product_id: str
+        self,
+        client: TestClient,
+        dummy_bearer_token: str,
+        dummy_product_id: Callable[[], str],
     ) -> None:
 
         response = client.delete(
-            self.ENDPOINT + dummy_product_id,
+            self.ENDPOINT + dummy_product_id(),
             headers={"Authorization": dummy_bearer_token},
         )
 
@@ -61,16 +65,21 @@ class TestProductEndpoints:
         assert response.json()["detail"] == "Product not found"
 
     def test_get_a_product_is_working(
-        self, client: TestClient, dummy_bearer_token: str, dummy_product_id: str
+        self,
+        client: TestClient,
+        dummy_bearer_token: str,
+        dummy_product_id: Callable[[], str],
     ) -> None:
 
+        product_id = dummy_product_id()
+
         response = client.get(
-            self.ENDPOINT + dummy_product_id,
+            self.ENDPOINT + product_id,
             headers={"Authorization": dummy_bearer_token},
         )
 
         assert response.status_code == HTTPStatus.OK
-        assert response.json()["id"] == dummy_product_id
+        assert response.json()["id"] == product_id
 
     def test_get_all_products_is_working(
         self,
@@ -91,20 +100,22 @@ class TestProductEndpoints:
         self,
         client: TestClient,
         dummy_bearer_token: str,
-        dummy_product_id: str,
+        dummy_product_id: Callable[[], str],
     ) -> None:
 
         new_values_of_product = ProductIn(name="Test", price=1.0, stock=1)
         token = dummy_bearer_token
 
+        product_id = dummy_product_id()
+
         put_response = client.put(
-            self.ENDPOINT + dummy_product_id,
+            self.ENDPOINT + product_id,
             json=new_values_of_product.dict(),
             headers={"Authorization": token},
         )
 
         get_response = client.get(
-            self.ENDPOINT + dummy_product_id, headers={"Authorization": token}
+            self.ENDPOINT + product_id, headers={"Authorization": token}
         )
 
         assert put_response.status_code == HTTPStatus.NO_CONTENT

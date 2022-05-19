@@ -1,4 +1,4 @@
-from typing import Iterator
+from typing import Callable, Iterator
 
 import pytest
 from app.auth import models, schemas
@@ -39,15 +39,15 @@ def dummy_bearer_token() -> str:
     return "Bearer " + auth_handler.encode_token(fake_user.dict())
 
 
-@pytest.fixture()
-def dummy_product_id() -> str:
-    fake = Faker()
-    database = next(override_get_db())
-    new_product = Product(name=fake.company(), price=1.0, stock=1)
-    database.add(new_product)
-    database.commit()
+# @pytest.fixture()
+# def dummy_product_id() -> str:
+#     fake = Faker()
+#     database = next(override_get_db())
+#     new_product = Product(name=fake.company(), price=1.0, stock=1)
+#     database.add(new_product)
+#     database.commit()
 
-    return ProductOut.from_orm(new_product).id
+#     return ProductOut.from_orm(new_product).id
 
 
 @pytest.fixture()
@@ -68,3 +68,17 @@ def dummy_insert_two_products() -> Iterator:
 
     database.query(Product).delete()
     database.commit()
+
+
+@pytest.fixture()
+def dummy_product_id() -> Callable[[float, int], str]:
+    def create_dummy_product_id(price: float = 1.0, stock: int = 1) -> str:
+        fake = Faker()
+        database = next(override_get_db())
+        new_product = Product(name=fake.company(), price=price, stock=stock)
+        database.add(new_product)
+        database.commit()
+
+        return ProductOut.from_orm(new_product).id
+
+    return create_dummy_product_id
