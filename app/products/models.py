@@ -1,7 +1,8 @@
-from enum import unique
+from uuid import uuid4
+
 from app.database import Base
 from sqlalchemy import Column, Float, Integer, String
-from uuid import uuid4
+from sqlalchemy.orm import relationship
 
 
 class Product(Base):
@@ -11,3 +12,4 @@ class Product(Base):
     name = Column(String(128), nullable=False, unique=True)
     price = Column(Float, nullable=False)
     stock = Column(Integer, nullable=False)
+    order_details = relationship("OrderDetails", back_populates="product_order_details")
