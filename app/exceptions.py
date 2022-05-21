@@ -20,3 +20,11 @@ class ProductsAreDuplicated(Exception):
     """
 
     pass
+
+
+class OrderNotFound(Exception):
+    """
+    Exception raised when an order is not found.
+    """
+
+    pass

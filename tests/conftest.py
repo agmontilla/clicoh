@@ -5,6 +5,7 @@ from app.auth import models, schemas
 from app.auth.validators import AuthHandler as auth_handler
 from app.products.models import Product
 from app.products.schemas import ProductOut
+from app.orders.models import Order, OrderDetails
 from faker import Faker
 from fastapi.testclient import TestClient
 
@@ -39,17 +40,6 @@ def dummy_bearer_token() -> str:
     return "Bearer " + auth_handler.encode_token(fake_user.dict())
 
 
-# @pytest.fixture()
-# def dummy_product_id() -> str:
-#     fake = Faker()
-#     database = next(override_get_db())
-#     new_product = Product(name=fake.company(), price=1.0, stock=1)
-#     database.add(new_product)
-#     database.commit()
-
-#     return ProductOut.from_orm(new_product).id
-
-
 @pytest.fixture()
 def dummy_insert_two_products() -> Iterator:
     fake = Faker()
@@ -82,3 +72,17 @@ def dummy_product_id() -> Callable[[float, int], str]:
         return ProductOut.from_orm(new_product).id
 
     return create_dummy_product_id
+
+
+@pytest.fixture()
+def delete_all_orders() -> Iterator:
+    database = next(override_get_db())
+    database.query(Order).delete()
+    database.query(OrderDetails).delete()
+    database.commit()
+
+    yield
+
+    database.query(Order).delete()
+    database.query(OrderDetails).delete()
+    database.commit()

@@ -4,12 +4,7 @@ from typing import List
 from pydantic import BaseModel, validator
 
 
-class OrderIn(BaseModel):
-    id: int
-    datetime: datetime
-
-
-class OrderDetails(BaseModel):
+class OrderDetailsOut(BaseModel):
     product_id: str
     quantity: int
 
@@ -20,13 +15,27 @@ class OrderDetails(BaseModel):
         return v
 
 
-class OrderDetailsCollection(BaseModel):
-    items: List[OrderDetails]
+class OrderDetailsCollectionIn(BaseModel):
+    items: List[OrderDetailsOut]
 
 
 class OrderOut(BaseModel):
     id: int
     datetime: datetime
+
+    class Config:
+        orm_mode = True
+
+
+class OrderCollectionOut(BaseModel):
+    items: List[OrderOut]
+
+    class Config:
+        orm_mode = True
+
+
+class OrderWithDetailsOut(OrderOut):
+    items: List[OrderDetailsOut]
 
     class Config:
         orm_mode = True
