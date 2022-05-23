@@ -115,4 +115,3 @@ def get_order_total_billing(
         return get_total_billing(order_id, currency_exchange, database)
     except OrderNotFound as e:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=str(e))
-
