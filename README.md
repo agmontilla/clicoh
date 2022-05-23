@@ -18,6 +18,8 @@ docker run -d --name {CONTAINER_NAME} -p 8080:8080 {IMAGE_NAME}
 
 Again, `{CONTAINER_NAME}` is just the name of the container what you prefer.
 
+Once the container starts, you can go to the swagger documentation to interact with available endpoints. You can found swagger in [localhost](http://localhost:8080/docs)
+
 ## TODO
 
 ### High Priority :red_circle:
