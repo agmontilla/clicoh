@@ -1,13 +1,11 @@
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict
 
-import requests
-from app.constants import USD_API_URL, Actions, CurrentExchanges
+from app.constants import Actions, CurrentExchanges
 from app.exceptions import (
     OrderNotFound,
     ProductNotAvailable,
     ProductNotFound,
     ProductsAreDuplicated,
-    USDRateNotFound,
 )
 from app.orders.models import Order, OrderDetails
 from app.orders.schemas import (
@@ -207,34 +205,3 @@ def get_total_billing(
     }
 
     return TotalBillingOut(total_billing=f[currency_exchange]())
-
-
-# def get_total_billing_in_usd(order_id: int, database: Session) -> TotalBillingOut:
-#     """
-#     Gets the total billing in USD.
-#     """
-#     order = database.query(Order).get(order_id)
-#     if order is None:
-#         raise OrderNotFound(order_id)
-
-#     return TotalBillingOut(total_billing=order.get_total() / get_usd_rate())
-
-
-# def get_usd_rate(mode: str = "Dolar Blue") -> float:
-#     """
-#     Gets the USD rate.
-#     """
-#     response = requests.get(USD_API_URL)
-#     response.raise_for_status()
-#     data = response.json()
-
-#     rate: float = 0
-
-#     for item in data:
-#         if item["casa"]["nombre"] == mode:
-#             rate = float(str.replace(item["casa"]["venta"], ",", "."))
-#             break
-#     else:
-#         raise USDRateNotFound(mode)
-
-#     return rate
