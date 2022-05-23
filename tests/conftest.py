@@ -1,11 +1,13 @@
 from typing import Callable, Iterator
 
 import pytest
+import requests_mock
 from app.auth import models, schemas
 from app.auth.validators import AuthHandler as auth_handler
+from app.constants import USD_API_URL
+from app.orders.models import Order, OrderDetails
 from app.products.models import Product
 from app.products.schemas import ProductOut
-from app.orders.models import Order, OrderDetails
 from faker import Faker
 from fastapi.testclient import TestClient
 
@@ -86,3 +88,37 @@ def delete_all_orders() -> Iterator:
     database.query(Order).delete()
     database.query(OrderDetails).delete()
     database.commit()
+
+
+@pytest.fixture()
+def mock_usd_rate() -> Iterator:
+    """Mock USD rate."""
+    with requests_mock.Mocker(real_http=True) as m:
+        m.get(
+            USD_API_URL,
+            json=[
+                {
+                    "casa": {
+                        "compra": "117,91",
+                        "venta": "123,91",
+                        "agencia": "349",
+                        "nombre": "Dolar Oficial",
+                        "variacion": "0,11",
+                        "ventaCero": "TRUE",
+                        "decimales": "2",
+                    }
+                },
+                {
+                    "casa": {
+                        "compra": "201,50",
+                        "venta": "204,50",
+                        "agencia": "310",
+                        "nombre": "Dolar Blue",
+                        "variacion": "-0,73",
+                        "ventaCero": "TRUE",
+                        "decimales": "2",
+                    }
+                },
+            ],
+        )
+        yield m

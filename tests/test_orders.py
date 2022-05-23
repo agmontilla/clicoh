@@ -1,12 +1,14 @@
 from http import HTTPStatus
 from typing import Callable, Iterator
 
+import pytest
 from fastapi.testclient import TestClient
 
 
 class TestOrdersEndpoints:
 
     ENDPOINT = "/orders/"
+    TOTAL_BILLING = "/orders/{}/billing"
 
     def test_create_an_order_is_working(
         self,
@@ -119,3 +121,41 @@ class TestOrdersEndpoints:
         )
 
         assert response.status_code == HTTPStatus.NO_CONTENT
+
+    @pytest.mark.parametrize(
+        "currency, result",
+        [("Pesos", 6.0), ("Dolar Blue", 6 / 204.50)],
+    )
+    def test_get_total_billing(
+        self,
+        client: TestClient,
+        dummy_bearer_token: str,
+        dummy_product_id: Callable[[float, int], str],
+        currency: str,
+        result: float,
+        delete_all_orders: Iterator,
+        mock_usd_rate: Iterator,
+    ) -> None:
+
+        product_id1 = dummy_product_id(1.0, 3)
+        product_id2 = dummy_product_id(2.0, 3)
+
+        response = client.post(
+            self.ENDPOINT,
+            json={
+                "items": [
+                    {"product_id": product_id1, "quantity": 2},
+                    {"product_id": product_id2, "quantity": 2},
+                ]
+            },
+            headers={"Authorization": dummy_bearer_token},
+        )
+
+        response = client.get(
+            self.TOTAL_BILLING.format("1"),
+            headers={"Authorization": dummy_bearer_token},
+            params={"currency_exchange": currency},
+        )
+
+        assert response.status_code == HTTPStatus.OK
+        assert response.json()["total_billing"] == result
