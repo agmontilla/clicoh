@@ -1,5 +1,4 @@
 from http import HTTPStatus
-from typing import Optional
 
 from app.constants import Actions, CurrentExchanges
 from app.database import get_db
