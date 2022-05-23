@@ -1,27 +1,28 @@
 from http import HTTPStatus
+from typing import Optional
 
+from app.constants import Actions, CurrentExchanges
+from app.database import get_db
 from app.exceptions import (
+    OrderNotFound,
     ProductNotAvailable,
     ProductNotFound,
     ProductsAreDuplicated,
-    OrderNotFound,
 )
 from app.orders import schemas
 from app.orders.services import (
-    products_are_available,
-    validate_duplicate_product_id,
-    create_new_order,
+    create_new_order,  # get_total_billing_in_usd,
+    delete_an_order,
     get_all_orders,
     get_an_order,
-    delete_an_order,
+    get_total_billing,
+    products_are_available,
     update_an_order,
+    validate_duplicate_product_id,
 )
-from app.database import get_db
 from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
-
-from app.constants import Actions
 
 orders_router = APIRouter()
 
@@ -102,3 +103,27 @@ def update_order(
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST, detail="Duplicate product id."
         )
+
+
+@orders_router.get("/{order_id}/billing", response_model=schemas.TotalBillingOut)
+def get_order_total_billing(
+    order_id: int,
+    currency_exchange: CurrentExchanges,
+    database: Session = Depends(get_db),
+) -> schemas.TotalBillingOut:
+    try:
+        return get_total_billing(order_id, currency_exchange, database)
+    except OrderNotFound as e:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=str(e))
+
+
+# @orders_router.get(
+#     "/{order_id}/total_billing_usd", response_model=schemas.TotalBillingOut
+# )
+# def get_order_total_billing_in_usd(
+#     order_id: int, database: Session = Depends(get_db)
+# ) -> schemas.TotalBillingOut:
+#     try:
+#         return get_total_billing_in_usd(order_id, database)
+#     except OrderNotFound as e:
+#         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=str(e))

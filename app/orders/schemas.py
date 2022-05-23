@@ -39,3 +39,10 @@ class OrderWithDetailsOut(OrderOut):
 
     class Config:
         orm_mode = True
+
+
+class TotalBillingOut(BaseModel):
+    total_billing: float
+
+    class Config:
+        orm_mode = True

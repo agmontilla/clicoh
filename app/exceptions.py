@@ -28,3 +28,11 @@ class OrderNotFound(Exception):
     """
 
     pass
+
+
+class USDRateNotFound(Exception):
+    """
+    Exception raised when a USD rate is not found.
+    """
+
+    pass
