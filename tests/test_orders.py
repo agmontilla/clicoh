@@ -73,3 +73,49 @@ class TestOrdersEndpoints:
         assert response.json()["items"][0]["product_id"] == product_id
         assert response.json()["items"][0]["quantity"] == 1
         assert len(response.json()["items"]) == 1
+
+    def test_delete_an_order_is_working(
+        self,
+        client: TestClient,
+        dummy_bearer_token: str,
+        dummy_product_id: Callable[[float, int], str],
+        delete_all_orders: Iterator,
+    ) -> None:
+
+        product_id = dummy_product_id(1.0, 2)
+
+        response = client.post(
+            self.ENDPOINT,
+            json={"items": [{"product_id": product_id, "quantity": 1}]},
+            headers={"Authorization": dummy_bearer_token},
+        )
+
+        response = client.delete(
+            self.ENDPOINT + "1", headers={"Authorization": dummy_bearer_token}
+        )
+
+        assert response.status_code == HTTPStatus.NO_CONTENT
+
+    def test_update_an_order_is_working(
+        self,
+        client: TestClient,
+        dummy_bearer_token: str,
+        dummy_product_id: Callable[[float, int], str],
+        delete_all_orders: Iterator,
+    ) -> None:
+
+        product_id = dummy_product_id(1.0, 3)
+
+        response = client.post(
+            self.ENDPOINT,
+            json={"items": [{"product_id": product_id, "quantity": 1}]},
+            headers={"Authorization": dummy_bearer_token},
+        )
+
+        response = client.put(
+            self.ENDPOINT + "1",
+            json={"items": [{"product_id": product_id, "quantity": 2}]},
+            headers={"Authorization": dummy_bearer_token},
+        )
+
+        assert response.status_code == HTTPStatus.NO_CONTENT
