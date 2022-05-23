@@ -116,14 +116,3 @@ def get_order_total_billing(
     except OrderNotFound as e:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=str(e))
 
-
-# @orders_router.get(
-#     "/{order_id}/total_billing_usd", response_model=schemas.TotalBillingOut
-# )
-# def get_order_total_billing_in_usd(
-#     order_id: int, database: Session = Depends(get_db)
-# ) -> schemas.TotalBillingOut:
-#     try:
-#         return get_total_billing_in_usd(order_id, database)
-#     except OrderNotFound as e:
-#         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=str(e))
