@@ -13,13 +13,19 @@ from app.orders.services import (
     create_new_order,
     get_all_orders,
     get_an_order,
+    delete_an_order,
+    update_an_order,
 )
 from app.database import get_db
 from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
 
+from app.constants import Actions
+
 orders_router = APIRouter()
+
+# TODO: Documenting all response codes
 
 
 @orders_router.post(
@@ -31,7 +37,9 @@ def create_order(
 
     try:
         validate_duplicate_product_id(order_details)
-        products_are_available(order_details, database)
+        products_are_available(
+            Actions.CREATE, order_details=order_details, database=database
+        )
         new_order = create_new_order(order_details, database)
 
     except ProductNotFound as e:
@@ -59,3 +67,38 @@ def get_order(
         return get_an_order(order_id, database)
     except OrderNotFound:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Order not found.")
+
+
+@orders_router.delete("/{order_id}", status_code=HTTPStatus.NO_CONTENT)
+def remove_order(order_id: int, database: Session = Depends(get_db)) -> None:
+    try:
+        delete_an_order(order_id, database)
+    except OrderNotFound:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Order not found.")
+
+
+@orders_router.put("/{order_id}", status_code=HTTPStatus.NO_CONTENT)
+def update_order(
+    order_id: int,
+    order_details: schemas.OrderDetailsCollectionIn,
+    database: Session = Depends(get_db),
+) -> None:
+
+    try:
+        validate_duplicate_product_id(order_details)
+        products_are_available(
+            Actions.UPDATE,
+            order_id=order_id,
+            order_details=order_details,
+            database=database,
+        )
+        update_an_order(order_id, order_details, database)
+
+    except (OrderNotFound, ProductNotFound) as e:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=str(e))
+    except ProductNotAvailable as e:
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=str(e))
+    except ProductsAreDuplicated:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail="Duplicate product id."
+        )

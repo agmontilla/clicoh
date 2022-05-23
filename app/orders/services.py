@@ -1,3 +1,6 @@
+from typing import Any, Callable, Dict
+
+from app.constants import Actions
 from app.exceptions import (
     OrderNotFound,
     ProductNotAvailable,
@@ -8,9 +11,9 @@ from app.orders.models import Order, OrderDetails
 from app.orders.schemas import (
     OrderCollectionOut,
     OrderDetailsCollectionIn,
+    OrderDetailsOut,
     OrderOut,
     OrderWithDetailsOut,
-    OrderDetailsOut,
 )
 from app.products.models import Product
 from sqlalchemy.orm import Session
@@ -25,7 +28,7 @@ def validate_duplicate_product_id(order_details: OrderDetailsCollectionIn) -> No
         raise ProductsAreDuplicated()
 
 
-def products_are_available(
+def products_are_available_when_order_is_created(
     order_details: OrderDetailsCollectionIn, database: Session
 ) -> None:
     """
@@ -38,6 +41,41 @@ def products_are_available(
             raise ProductNotFound(item.product_id)
         if product.stock < item.quantity:
             raise ProductNotAvailable(item.product_id)
+
+
+def products_are_available_when_order_is_updated(
+    order_id: int, order_details: OrderDetailsCollectionIn, database: Session
+) -> None:
+    """
+    Validates if the products are available.
+    """
+
+    order = database.query(Order).get(order_id)
+
+    if order is None:
+        raise OrderNotFound(order_id)
+
+    current_products = {item.product_id: item.quantity for item in order.order_details}
+
+    for item in order_details.items:
+        product = database.query(Product).get(item.product_id)
+        if product is None:
+            raise ProductNotFound(item.product_id)
+
+        if product.id in current_products.keys():
+            if (product.stock + current_products[product.id]) - item.quantity < 0:
+                raise ProductNotAvailable(item.product_id)
+        else:
+            if product.stock < item.quantity:
+                raise ProductNotAvailable(item.product_id)
+
+
+def products_are_available(action: Actions, **kwargs: Any) -> None:
+    product_available: Dict[Actions, Callable] = {
+        Actions.CREATE: products_are_available_when_order_is_created,
+        Actions.UPDATE: products_are_available_when_order_is_updated,
+    }
+    product_available[action](**kwargs)
 
 
 def create_new_order(
@@ -53,7 +91,7 @@ def create_new_order(
     database.refresh(new_order)
 
     for item in order_details.items:
-        # TODO: Use foreign key "product" to avoid this query.
+        # TODO: Verify if I can use foreign key "product" to avoid this query.
         product = database.query(Product).get(item.product_id)
         product.stock -= item.quantity
         database.add(product)
@@ -94,3 +132,61 @@ def get_an_order(order_id: int, database: Session) -> OrderWithDetailsOut:
     return OrderWithDetailsOut(
         id=order.id, datetime=order.datetime, items=order_details
     )
+
+
+def delete_an_order(order_id: int, database: Session) -> None:
+    """
+    Deletes an order.
+    """
+    order = database.query(Order).get(order_id)
+    if order is None:
+        raise OrderNotFound(order_id)
+
+    for item in order.order_details:
+        product = database.query(Product).get(item.product_id)
+        product.stock += item.quantity
+        database.add(product)
+
+    for item in order.order_details:
+        database.delete(item)
+
+    database.delete(order)
+    database.commit()
+
+
+def update_an_order(
+    order_id: int, order_details: OrderDetailsCollectionIn, database: Session
+) -> None:
+    """
+    Updates an order.
+    """
+    order = database.query(Order).get(order_id)
+    if order is None:
+        raise OrderNotFound(order_id)
+
+    for item in order.order_details:
+        product = database.query(Product).get(item.product_id)
+        product.stock += item.quantity
+        database.add(product)
+
+    for item in order.order_details:
+        database.delete(item)
+
+    for item in order_details.items:
+        product = database.query(Product).get(item.product_id)
+        product.stock -= item.quantity
+        database.add(product)
+
+    for item in order_details.items:
+        new_order_details = OrderDetails(
+            order_id=order.id,
+            product_id=item.product_id,
+            quantity=item.quantity,
+        )
+        database.add(new_order_details)
+
+    database.commit()
+
+    # return OrderWithDetailsOut(
+    #     id=order.id, datetime=order.datetime, items=order_details.items
+    # )
